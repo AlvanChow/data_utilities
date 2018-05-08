@@ -31,7 +31,7 @@ def scale(x,range1=(0,0),range2=(0,0)):
     return range2[0]*(1 - (x-range1[0]) / (range1[1]-range1[0])) + range2[1]*((x-range1[0]) / (range1[1]-range1[0]))
 
 
-def get_image(fname):    
+def get_image(fname):
     """
     Get an image from a filepath in ndarray format
     """
@@ -111,12 +111,12 @@ def chip_image(img,coords,classes,shape=(300,300)):
     """
     height,width,_ = img.shape
     wn,hn = shape
-    
+
     w_num,h_num = (int(width/wn),int(height/hn))
     images = np.zeros((w_num*h_num,hn,wn,3))
     total_boxes = {}
     total_classes = {}
-    
+
     k = 0
     for i in range(w_num):
         for j in range(h_num):
@@ -131,17 +131,17 @@ def chip_image(img,coords,classes,shape=(300,300)):
                                           np.clip(outn[:,2]-(wn*i),0,wn),
                                           np.clip(outn[:,3]-(hn*j),0,hn))))
             box_classes = classes[x][y]
-            
+
             if out.shape[0] != 0:
                 total_boxes[k] = out
                 total_classes[k] = box_classes
             else:
                 total_boxes[k] = np.array([[0,0,0,0]])
                 total_classes[k] = np.array([0])
-            
+
             chip = img[hn*j:hn*(j+1),wn*i:wn*(i+1),:3]
             images[k]=chip
-            
+
             k = k + 1
-    
+
     return images.astype(np.uint8),total_boxes,total_classes

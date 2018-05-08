@@ -48,7 +48,7 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
     if deg < 0:
         deg = 360-deg
     deg = int(deg)
-        
+
     angle = 360-deg
     padX = [img.shape[0] - pivot[0], pivot[0]]
     padY = [img.shape[1] - pivot[1], pivot[1]]
@@ -58,7 +58,7 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
     #PIL rotate uses ~.01 seconds
     imgR = Image.fromarray(imgP).rotate(angle)
     imgR = np.array(imgR)
-    
+
     theta = deg * (np.pi/180)
     R = np.array([[np.cos(theta),-np.sin(theta)],[np.sin(theta),np.cos(theta)]])
     #  [(cos(theta), -sin(theta))] DOT [xmin, xmax] = [xmin*cos(theta) - ymin*sin(theta), xmax*cos(theta) - ymax*sin(theta)]
@@ -69,19 +69,19 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
         xmin, ymin, xmax, ymax = box
         #The 'x' values are not centered by the x-center (shape[0]/2)
         #but rather the y-center (shape[1]/2)
-        
+
         xmin -= pivot[1]
         xmax -= pivot[1]
         ymin -= pivot[0]
         ymax -= pivot[0]
 
         bfull = np.array([ [xmin,xmin,xmax,xmax] , [ymin,ymax,ymin,ymax]])
-        c = np.dot(R,bfull) 
+        c = np.dot(R,bfull)
         c[0] += pivot[1]
         c[0] = np.clip(c[0],0,img.shape[1])
         c[1] += pivot[0]
         c[1] = np.clip(c[1],0,img.shape[0])
-        
+
         if np.all(c[1] == img.shape[0]) or np.all(c[1] == 0):
             c[0] = [0,0,0,0]
         if np.all(c[0] == img.shape[1]) or np.all(c[0] == 0):
@@ -91,12 +91,12 @@ def rotate_image_and_boxes(img, deg, pivot, boxes):
 
         if not (np.all(c[1] == 0) and np.all(c[0] == 0)):
             newboxes.append(newbox)
-    
+
     return imgR[padY[0] : -padY[1], padX[0] : -padX[1]], newboxes
 
 def shift_image(image,bbox):
     """
-    Shift an image by a random amount on the x and y axis drawn from discrete  
+    Shift an image by a random amount on the x and y axis drawn from discrete
         uniform distribution with parameter min(shape/10)
 
     Args:
@@ -110,7 +110,7 @@ def shift_image(image,bbox):
     maxdelta = min(shape)/10
     dx,dy = np.random.randint(-maxdelta,maxdelta,size=(2))
     newimg = np.zeros(image.shape,dtype=np.uint8)
-    
+
     nb = []
     for box in bbox:
         xmin,xmax = np.clip((box[0]+dy,box[2]+dy),0,shape[1])
@@ -119,12 +119,12 @@ def shift_image(image,bbox):
         #we only add the box if they are not all 0
         if not(xmin==0 and xmax ==0 and ymin==0 and ymax ==0):
             nb.append([xmin,ymin,xmax,ymax])
-    
+
     newimg[max(dx,0):min(image.shape[0],image.shape[0]+dx),
            max(dy,0):min(image.shape[1],image.shape[1]+dy)] = \
     image[max(-dx,0):min(image.shape[0],image.shape[0]-dx),
           max(-dy,0):min(image.shape[1],image.shape[1]-dy)]
-    
+
     return newimg, nb
 
 def salt_and_pepper(img,prob=.005):
@@ -144,7 +144,7 @@ def salt_and_pepper(img,prob=.005):
     blackmask = np.random.randint(0,int((1-prob)*200),size=img.shape[:2])
     newimg[whitemask==0] = 255
     newimg[blackmask==0] = 0
-        
+
     return newimg
 
 
@@ -161,13 +161,13 @@ def gaussian_blur(img, max_sigma=1.5):
     """
     return filters.gaussian(img,np.random.random()*max_sigma,multichannel=True)*255
 
-def draw_bboxes(img,boxes):
+def draw_bboxes(img,boxes,labels):
     """
     A helper function to draw bounding box rectangles on images
 
     Args:
         img: image to be drawn on in array format
-        boxes: An (N,4) array of bounding boxes
+        boxes: An (N,5) array of bounding boxes and labels
 
     Output:
         Image with drawn bounding boxes
@@ -179,8 +179,10 @@ def draw_bboxes(img,boxes):
     idx = 0
 
     for b in boxes:
-        xmin,ymin,xmax,ymax = b
-        
+        xmin,ymin,xmax,ymax,label_number = b
+
         for j in range(3):
+            draw.multiline_text((xmin+j, ymax+j), labels[label_number], fill='white', )
             draw.rectangle(((xmin+j, ymin+j), (xmax+j, ymax+j)), outline="red")
+
     return source

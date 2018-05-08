@@ -1,0 +1,16 @@
+jupyter notebook --ip=0.0.0.0
+
+# start new session
+tmux
+
+# attach new session
+tmux a
+
+# disconnect
+CTRL-b + d
+
+# create terminal
+CTRL-b + c
+
+# switch terminal
+CTRL-b + number

@@ -32,7 +32,7 @@ import aug_util as aug
 import csv
 
 """
-  A script that processes xView imagery. 
+  A script that processes xView imagery.
   Args:
       image_folder: A folder path to the directory storing xView .tif files
         ie ("xView_data/")
@@ -73,8 +73,8 @@ def get_images_from_filename_array(coords,chips,classes,folder_names,res=(250,25
     clses = []
 
     k = 0
-    bi = 0   
-    
+    bi = 0
+
     for folder in folder_names:
         fnames = glob.glob(folder + "*.tif")
         fnames.sort()
@@ -82,7 +82,7 @@ def get_images_from_filename_array(coords,chips,classes,folder_names,res=(250,25
             #Needs to be "X.tif" ie ("5.tif")
             name = fname.split("\\")[-1]
             arr = wv.get_image(fname)
-            
+
             img,box,cls = wv.chip_image(arr,coords[chips==name],classes[chips==name],res)
 
             for im in img:
@@ -92,7 +92,7 @@ def get_images_from_filename_array(coords,chips,classes,folder_names,res=(250,25
             for c in cls:
                 clses.append(cls)
             k = k + 1
-            
+
     return images, boxes, clses
 
 def shuffle_images_and_boxes_classes(im,box,cls):
@@ -109,12 +109,12 @@ def shuffle_images_and_boxes_classes(im,box,cls):
     """
     assert len(im) == len(box)
     assert len(box) == len(cls)
-    
+
     perm = np.random.permutation(len(im))
     out_b = {}
     out_c = {}
-    
-    k = 0 
+
+    k = 0
     for ind in perm:
         out_b[k] = box[ind]
         out_c[k] = cls[ind]
@@ -184,20 +184,20 @@ if __name__ == "__main__":
             for idx, image in enumerate(im):
                 tf_example = tfr.to_tf_example(image,box[idx],classes_final[idx])
 
-                #Check to make sure that the TF_Example has valid bounding boxes.  
+                #Check to make sure that the TF_Example has valid bounding boxes.
                 #If there are no valid bounding boxes, then don't save the image to the TFRecord.
                 float_list_value = tf_example.features.feature['image/object/bbox/xmin'].float_list.value
-                
+
                 if (ind_chips < max_chips_per_res and np.array(float_list_value).any()):
                     tot_box+=np.array(float_list_value).shape[0]
-                    
+
                     if idx < split_ind:
                         test_writer.write(tf_example.SerializeToString())
                         test_chips+=1
                     else:
                         train_writer.write(tf_example.SerializeToString())
                         train_chips += 1
-     
+
                     ind_chips +=1
 
                     #Make augmentation probability proportional to chip size.  Lower chip size = less chance.
@@ -206,7 +206,7 @@ if __name__ == "__main__":
                     #for 200x200: p(augment) = 200/500 ; for 300x300: p(augment) = 300/500 ...
 
                     if AUGMENT and prob < it[0]:
-                        
+
                         for extra in range(3):
                             center = np.array([int(image.shape[0]/2),int(image.shape[1]/2)])
                             deg = np.random.randint(-10,10)
@@ -222,7 +222,7 @@ if __name__ == "__main__":
                             elif p == 2:
                                 newimg,nb = aug.rotate_image_and_boxes(newimg,deg,center,box[idx])
                                 newimg,nb = aug.shift_image(newimg,nb)
-                                
+
 
                             newimg = (newimg).astype(np.uint8)
 
@@ -252,4 +252,4 @@ if __name__ == "__main__":
     logging.info("saved: %d train chips" % train_chips)
     logging.info("saved: %d test chips" % test_chips)
     train_writer.close()
-    test_writer.close() 
+    test_writer.close()
